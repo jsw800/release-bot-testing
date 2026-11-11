@@ -1,0 +1,36 @@
+name: Release
+
+# A stub of albert-io/nexus's release.yml: the same triggers and conditions,
+# with every real step replaced by an echo. Nothing deploys anywhere.
+# A direct full release emits both events; only `released` deploys it.
+on:
+  release:
+    types:
+      - published
+      - released
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.action }}
+
+jobs:
+  # Promotions do not emit `published`, so notes run only on initial publication.
+  create-release-notes:
+    name: Create Release Notes
+    if: github.event.action == 'published'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "STUB would write release notes for ${{ github.ref_name }}"
+
+  deploy:
+    if: ${{ (github.event.action == 'published' && github.event.release.prerelease) || github.event.action == 'released' }}
+    name: Deploy
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: ${{ github.event.action == 'released' && 'prod' || 'stage' }}
+    steps:
+      - run: echo "STUB would deploy ${{ github.ref_name }} at ${{ github.sha }} to $ENVIRONMENT"
+      # Set the repo variable FAIL_DEPLOY=true to make deploys fail (for retry tests).
+      - if: ${{ vars.FAIL_DEPLOY == 'true' }}
+        run: |
+          echo "STUB deploy failing on purpose (FAIL_DEPLOY=true)"
+          exit 1
